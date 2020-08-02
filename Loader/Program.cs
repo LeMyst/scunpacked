@@ -84,7 +84,7 @@ namespace Loader
 			File.WriteAllText(Path.Combine(outputRoot, "labels.json"), JsonConvert.SerializeObject(labels));
 
 			// Manufacturers
-			/*var manufacturerLoader = new ManufacturerLoader(new StarmapService(labels))
+			var manufacturerLoader = new ManufacturerLoader(new StarmapService(labels))
 			{
 				DataRoot = scDataRoot
 			};
@@ -120,7 +120,7 @@ namespace Loader
 				OnXmlLoadout = path => loadoutLoader.Load(path)
 			};
 			var shops = shopLoader.Load();
-			File.WriteAllText(Path.Combine(outputRoot, "shops.json"), JsonConvert.SerializeObject(shops));*/
+			File.WriteAllText(Path.Combine(outputRoot, "shops.json"), JsonConvert.SerializeObject(shops));
 
 			// Starmap
 			var locationLoader = new StarmapLoader(new StarmapService(labels))
