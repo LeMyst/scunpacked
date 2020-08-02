@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Collections.Generic;
 
 using Newtonsoft.Json;
@@ -123,12 +122,12 @@ namespace Loader
 			File.WriteAllText(Path.Combine(outputRoot, "shops.json"), JsonConvert.SerializeObject(shops));
 
 			// Starmap
-			var locationLoader = new StarmapLoader(new StarmapService(labels))
+			var starmapLoader = new StarmapLoader(new StarmapService(labels))
 			{
 				DataRoot = scDataRoot
 			};
-			var locationIndex = locationLoader.Load();
-			File.WriteAllText(Path.Combine(outputRoot, "starmap.json"), JsonConvert.SerializeObject(locationIndex));
+			var starmapIndex = starmapLoader.Load();
+			File.WriteAllText(Path.Combine(outputRoot, "starmap.json"), JsonConvert.SerializeObject(starmapIndex));
 		}
 	}
 }
