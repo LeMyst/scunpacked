@@ -8,9 +8,9 @@ namespace Loader
 	{
 		public string DataRoot { get; set; }
 
-		LocalisationService localisationService;
+		StarmapService localisationService;
 
-		public ManufacturerLoader(LocalisationService localisationService)
+		public ManufacturerLoader(StarmapService localisationService)
 		{
 			this.localisationService = localisationService;
 		}

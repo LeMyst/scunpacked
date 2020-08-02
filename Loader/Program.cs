@@ -84,7 +84,7 @@ namespace Loader
 			File.WriteAllText(Path.Combine(outputRoot, "labels.json"), JsonConvert.SerializeObject(labels));
 
 			// Manufacturers
-			var manufacturerLoader = new ManufacturerLoader(new LocalisationService(labels))
+			/*var manufacturerLoader = new ManufacturerLoader(new StarmapService(labels))
 			{
 				DataRoot = scDataRoot
 			};
@@ -114,21 +114,21 @@ namespace Loader
 			File.WriteAllText(Path.Combine(outputRoot, "items.json"), JsonConvert.SerializeObject(itemIndex));
 
 			// Prices
-			var shopLoader = new ShopLoader(new LocalisationService(labels))
+			var shopLoader = new ShopLoader(new StarmapService(labels))
 			{
 				DataRoot = scDataRoot,
 				OnXmlLoadout = path => loadoutLoader.Load(path)
 			};
 			var shops = shopLoader.Load();
-			File.WriteAllText(Path.Combine(outputRoot, "shops.json"), JsonConvert.SerializeObject(shops));
+			File.WriteAllText(Path.Combine(outputRoot, "shops.json"), JsonConvert.SerializeObject(shops));*/
 
-			// Locations
-			var locationLoader = new LocationLoader(new LocalisationService(labels))
+			// Starmap
+			var locationLoader = new StarmapLoader(new StarmapService(labels))
 			{
 				DataRoot = scDataRoot
 			};
 			var locationIndex = locationLoader.Load();
-			File.WriteAllText(Path.Combine(outputRoot, "locations.json"), JsonConvert.SerializeObject(locationIndex));
+			File.WriteAllText(Path.Combine(outputRoot, "starmap.json"), JsonConvert.SerializeObject(locationIndex));
 		}
 	}
 }

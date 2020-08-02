@@ -34,6 +34,7 @@ namespace Loader
 		public string type;
 		public string subType;
 		public string[] tags;
+		public string manufacturer;
 		public string node_reference;
 		public string item_reference;
 

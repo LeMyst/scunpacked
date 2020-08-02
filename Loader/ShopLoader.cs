@@ -23,9 +23,9 @@ namespace Loader
 			"TestInventories"
 		};
 
-		LocalisationService localisationService;
+		StarmapService localisationService;
 
-		public ShopLoader(LocalisationService localisationService)
+		public ShopLoader(StarmapService localisationService)
 		{
 			this.localisationService = localisationService;
 		}
@@ -120,6 +120,7 @@ namespace Loader
 						if (entity?.Components.SAttachableComponentParams != null)
 						{
 							item.displayName = localisationService.GetText(entity.Components.SAttachableComponentParams.AttachDef.Localization.Name);
+							item.manufacturer = entity.Components.SAttachableComponentParams.AttachDef.Manufacturer;
 							item.tags = entity.Components.SAttachableComponentParams.AttachDef.Tags.Split(" ");
 							item.type = entity.Components.SAttachableComponentParams.AttachDef.Type;
 							item.subType = entity.Components.SAttachableComponentParams.AttachDef.SubType;

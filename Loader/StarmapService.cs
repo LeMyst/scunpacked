@@ -5,11 +5,11 @@ using scdb.Xml.Entities;
 
 namespace Loader
 {
-	public class LocalisationService
+	public class StarmapService
 	{
 		Dictionary<string, string> labels;
 
-		public LocalisationService(Dictionary<string, string> labels)
+		public StarmapService(Dictionary<string, string> labels)
 		{
 			this.labels = labels;
 		}
@@ -18,7 +18,7 @@ namespace Loader
 		{
 			var key = label.StartsWith("@") ? label.Substring(1) : label;
 
-			if (labels.ContainsKey(key)) return labels[key];
+			if (labels.ContainsKey(key)) return labels[key].Trim();
 
 			return null;
 		}
