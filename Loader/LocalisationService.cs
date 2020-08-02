@@ -5,11 +5,11 @@ using scdb.Xml.Entities;
 
 namespace Loader
 {
-	public class StarmapService
+	public class LocalisationService
 	{
 		Dictionary<string, string> labels;
 
-		public StarmapService(Dictionary<string, string> labels)
+		public LocalisationService(Dictionary<string, string> labels)
 		{
 			this.labels = labels;
 		}

@@ -23,9 +23,9 @@ namespace Loader
 			"TestInventories"
 		};
 
-		StarmapService localisationService;
+		LocalisationService localisationService;
 
-		public ShopLoader(StarmapService localisationService)
+		public ShopLoader(LocalisationService localisationService)
 		{
 			this.localisationService = localisationService;
 		}
