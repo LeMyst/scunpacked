@@ -128,14 +128,6 @@ namespace Loader
 			};
 			var starmapIndex = starmapLoader.Load();
 			File.WriteAllText(Path.Combine(outputRoot, "starmap.json"), JsonConvert.SerializeObject(starmapIndex));
-
-			// Location
-			var locationLoader = new LocationLoader(new LocalisationService(labels))
-			{
-				DataRoot = scDataRoot
-			};
-			var locationIndex = locationLoader.Load();
-			File.WriteAllText(Path.Combine(outputRoot, "locations.json"), JsonConvert.SerializeObject(locationIndex));
 		}
 	}
 }
