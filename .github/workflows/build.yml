@@ -1,11 +1,12 @@
 name: Build
 on: [push]
 jobs:
-
-  API:
+jobs:
+  build:
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
     - uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '4.7.x' # SDK Version to use; x will use the latest version of the 3.1 channel
+        dotnet-version: '4.7.x' # SDK Version to use; x will use the latest version of the 4.7 channel
     - run: dotnet build Loader
