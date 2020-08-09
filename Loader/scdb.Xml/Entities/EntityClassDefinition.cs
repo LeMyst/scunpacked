@@ -8,6 +8,9 @@ namespace scdb.Xml.Entities
 		public StaticEntityClassData StaticEntityClassData;
 		public Reference[] tags;
 		public Components Components;
+		
+		[XmlAttribute]
+		public string __ref;
 
 		public string ClassName;
 	}

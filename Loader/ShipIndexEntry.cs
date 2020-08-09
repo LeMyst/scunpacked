@@ -3,6 +3,7 @@ namespace Loader
 	public class ShipIndexEntry
 	{
 		public string jsonFilename;
+		public string reference;
 		public string name;
 		public string career;
 		public string role;

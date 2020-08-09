@@ -122,6 +122,7 @@ namespace Loader
 				var indexEntry = new ShipIndexEntry
 				{
 					jsonFilename = Path.GetRelativePath(Path.GetDirectoryName(OutputFolder), jsonFilename),
+					reference = entity.__ref,
 					className = entity.ClassName,
 					type = entity.Components?.SAttachableComponentParams?.AttachDef.Type,
 					subType = entity.Components?.SAttachableComponentParams?.AttachDef.SubType,
