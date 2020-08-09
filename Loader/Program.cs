@@ -91,7 +91,7 @@ namespace Loader
 			File.WriteAllText(Path.Combine(outputRoot, "manufacturers.json"), JsonConvert.SerializeObject(manufacturerIndex));
 
 			// Ships and ground vehicles
-			var shipLoader = new ShipLoader
+			var shipLoader = new ShipLoader(new LocalisationService(labels))
 			{
 				OutputFolder = Path.Combine(outputRoot, "ships"),
 				DataRoot = scDataRoot,
