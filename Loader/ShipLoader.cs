@@ -59,6 +59,13 @@ namespace Loader
 			"carbon"
 		};
 
+		LocalisationService localisationService;
+
+		public ShipLoader(LocalisationService localisationService)
+		{
+			this.localisationService = localisationService;
+		}
+
 		public List<ShipIndexEntry> Load()
 		{
 			Directory.CreateDirectory(OutputFolder);
@@ -125,9 +132,9 @@ namespace Loader
 					className = entity.ClassName,
 					type = entity.Components?.SAttachableComponentParams?.AttachDef.Type,
 					subType = entity.Components?.SAttachableComponentParams?.AttachDef.SubType,
-					name = entity.Components.VehicleComponentParams.vehicleName,
-					career = entity.Components.VehicleComponentParams.vehicleCareer,
-					role = entity.Components.VehicleComponentParams.vehicleRole,
+					name = localisationService.GetText(entity.Components.VehicleComponentParams.vehicleName),
+					career = localisationService.GetText(entity.Components.VehicleComponentParams.vehicleCareer),
+					role = localisationService.GetText(entity.Components.VehicleComponentParams.vehicleRole),
 					dogFightEnabled = Convert.ToBoolean(entity.Components.VehicleComponentParams.dogfightEnabled),
 					size = vehicle?.size,
 					isGroundVehicle = isGroundVehicle,
