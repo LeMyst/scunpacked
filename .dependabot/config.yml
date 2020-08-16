@@ -1,6 +1,5 @@
-# This is an example with only required properties:
 version: 1
 update_configs:
   - package_manager: "dotnet:nuget"
-    directory: "/Loader/"
+    directory: "/Loader"
     update_schedule: "live"
