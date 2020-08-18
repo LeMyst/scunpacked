@@ -41,7 +41,7 @@ namespace Loader
 			{
 				var shop = new Shop
 				{
-					name = shopNode.Name,
+					name = GetShopName(shopNode.Name),
 					profitMargin = shopNode.ProfitMargin,
 					acceptsStolenGoods = Convert.ToBoolean(shopNode.AcceptsStolenGoods),
 					reference = shopNode.ID,
@@ -174,6 +174,14 @@ namespace Loader
 				var entity = (T)serialiser.Deserialize(stream);
 				return entity;
 			}
+		}
+
+		string GetShopName(string internalName)
+		{
+			if (ShopNames.Lookup.ContainsKey(internalName)) return ShopNames.Lookup[internalName];
+
+			Console.WriteLine($"Don't know the friendly name for shop '{internalName}'");
+			return internalName;
 		}
 	}
 }
