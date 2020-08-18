@@ -1,4 +1,4 @@
-![Build](https://github.com/Mystou/scunpacked/workflows/Build/badge.svg)
+![Build](https://github.com/LeMyst/scunpacked/workflows/Build/badge.svg)
 
 ## Extracting data from Star Citizen
 
