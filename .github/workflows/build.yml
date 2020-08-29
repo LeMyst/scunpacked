@@ -9,3 +9,5 @@ jobs:
       with:
         dotnet-version: '3.1.x' # SDK Version to use; x will use the latest version of the 3.1 channel
     - run: dotnet build Loader
+      env:
+        DOTNET_CLI_TELEMETRY_OPTOUT: true
