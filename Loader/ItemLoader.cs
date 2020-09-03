@@ -19,7 +19,14 @@ namespace Loader
 		string[] include = new string[] {
 			"ships",
 			"vehicles",
-			"doors"
+			"doors",
+			"weapons",
+			"flair",
+			"storage",
+			@"characters\human\armor\pu_armor",
+			@"characters\human\clothing\pu_bespoke",
+			@"characters\human\clothing\pu_clothing",
+			@"characters\human\head\npc\eyes\accessories"
 		};
 
 		string[] avoids =
