@@ -47,8 +47,8 @@ namespace Loader
 
 			if (itemFile != null)
 			{
-				var entityParser = new EntityParser();
-				var entity = entityParser.Parse(itemFile, x => x);
+				var entityParser = new ClassParser<scdb.Xml.Entities.EntityClassDefinition>();
+				var entity = entityParser.Parse(itemFile);
 				var json = JsonConvert.SerializeObject(entity);
 				Console.WriteLine(json);
 				return;
@@ -101,13 +101,23 @@ namespace Loader
 
 			File.WriteAllText(Path.Combine(outputRoot, "ships.json"), JsonConvert.SerializeObject(shipIndex));
 
+			// Ammunition
+			var ammoLoader = new AmmoLoader
+			{
+				OutputFolder = Path.Combine(outputRoot, "ammo"),
+				DataRoot = scDataRoot
+			};
+			var ammoIndex = ammoLoader.Load();
+			File.WriteAllText(Path.Combine(outputRoot, "ammo.json"), JsonConvert.SerializeObject(ammoIndex));
+
 			// Items that go on ships
 			var itemLoader = new ItemLoader
 			{
 				OutputFolder = Path.Combine(outputRoot, "items"),
 				DataRoot = scDataRoot,
 				OnXmlLoadout = path => loadoutLoader.Load(path),
-				Manufacturers = manufacturerIndex
+				Manufacturers = manufacturerIndex,
+				Ammo = ammoIndex
 			};
 			var itemIndex = itemLoader.Load();
 			File.WriteAllText(Path.Combine(outputRoot, "items.json"), JsonConvert.SerializeObject(itemIndex));
@@ -115,8 +125,7 @@ namespace Loader
 			// Prices
 			var shopLoader = new ShopLoader(new LocalisationService(labels))
 			{
-				DataRoot = scDataRoot,
-				OnXmlLoadout = path => loadoutLoader.Load(path)
+				DataRoot = scDataRoot
 			};
 			var shops = shopLoader.Load();
 			File.WriteAllText(Path.Combine(outputRoot, "shops.json"), JsonConvert.SerializeObject(shops));

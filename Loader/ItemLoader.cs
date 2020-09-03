@@ -15,6 +15,7 @@ namespace Loader
 		public string DataRoot { get; set; }
 		public Func<string, string> OnXmlLoadout { get; set; }
 		public List<ManufacturerIndexEntry> Manufacturers { get; set; }
+		public List<AmmoIndexEntry> Ammo { get; set; }
 
 		string[] include = new string[] {
 			"ships",
@@ -34,7 +35,8 @@ namespace Loader
 			// CIG tags
 			"test",
 			"template",
-			"s42"
+			"s42",
+			"tow"
 		};
 
 		public List<ItemIndexEntry> Load()
@@ -46,6 +48,45 @@ namespace Loader
 			{
 				index.AddRange(Load(Path.Combine(@"Data\Libs\Foundry\Records\entities\scitem", folder)));
 			}
+
+			foreach (var entry in index)
+			{
+				var entity = ClassParser<EntityClassDefinition>.ClassByRefCache[entry.reference];
+
+				// If the entity has a loadout file, then load it
+				if (entity.Components?.SEntityComponentDefaultLoadoutParams?.loadout?.SItemPortLoadoutXMLParams != null)
+				{
+					entity.Components.SEntityComponentDefaultLoadoutParams.loadout.SItemPortLoadoutXMLParams.loadoutPath = OnXmlLoadout(entity.Components.SEntityComponentDefaultLoadoutParams.loadout.SItemPortLoadoutXMLParams.loadoutPath);
+				}
+
+				// If it is a weapon magazine, then load it
+				EntityClassDefinition magazine = null;
+				if (!String.IsNullOrEmpty(entity.Components?.SCItemWeaponComponentParams?.ammoContainerRecord))
+				{
+					magazine = ClassParser<EntityClassDefinition>.ClassByRefCache.GetValueOrDefault(entity.Components?.SCItemWeaponComponentParams.ammoContainerRecord);
+				}
+
+				// If it is an ammo container, then load the ammo properties
+				AmmoIndexEntry ammoEntry = null;
+				var ammoRef = magazine?.Components?.SAmmoContainerComponentParams?.ammoParamsRecord ?? entity.Components?.SAmmoContainerComponentParams?.ammoParamsRecord;
+				if (!String.IsNullOrEmpty(ammoRef))
+				{
+					ammoEntry = Ammo.FirstOrDefault(x => x.reference == ammoRef);
+				}
+
+				var jsonFilename = Path.Combine(OutputFolder, $"{entity.ClassName.ToLower()}.json");
+				var json = JsonConvert.SerializeObject(new
+				{
+					magazine = magazine,
+					ammo = ammoEntry,
+					Raw = new
+					{
+						Entity = entity,
+					}
+				});
+				File.WriteAllText(jsonFilename, json);
+			}
+
 			return index;
 		}
 
@@ -62,24 +103,14 @@ namespace Loader
 
 				// Entity
 				Console.WriteLine(entityFilename);
-				var entityParser = new EntityParser();
-				entity = entityParser.Parse(entityFilename, OnXmlLoadout);
+				var entityParser = new ClassParser<EntityClassDefinition>();
+				entity = entityParser.Parse(entityFilename);
 				if (entity == null) continue;
-
-				var jsonFilename = Path.Combine(OutputFolder, $"{entity.ClassName.ToLower()}.json");
-				var json = JsonConvert.SerializeObject(new
-				{
-					Raw = new
-					{
-						Entity = entity,
-					}
-				});
-				File.WriteAllText(jsonFilename, json);
 
 				index.Add(new ItemIndexEntry
 				{
-					jsonFilename = Path.GetRelativePath(Path.GetDirectoryName(OutputFolder), jsonFilename),
 					className = entity.ClassName,
+					reference = entity.__ref,
 					itemName = entity.ClassName.ToLower(),
 					type = entity.Components?.SAttachableComponentParams?.AttachDef.Type,
 					subType = entity.Components?.SAttachableComponentParams?.AttachDef.SubType,
