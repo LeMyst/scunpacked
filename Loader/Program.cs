@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 using Newtonsoft.Json;
 using NDesk.Options;
+using scdb.Xml.Entities;
 
 namespace Loader
 {
@@ -110,7 +111,7 @@ namespace Loader
 			var ammoIndex = ammoLoader.Load();
 			File.WriteAllText(Path.Combine(outputRoot, "ammo.json"), JsonConvert.SerializeObject(ammoIndex));
 
-			// Items that go on ships
+			// Items
 			var itemLoader = new ItemLoader
 			{
 				OutputFolder = Path.Combine(outputRoot, "items"),
@@ -121,6 +122,22 @@ namespace Loader
 			};
 			var itemIndex = itemLoader.Load();
 			File.WriteAllText(Path.Combine(outputRoot, "items.json"), JsonConvert.SerializeObject(itemIndex));
+
+			// Create an index file for each different item type
+			var typeIndicies = new Dictionary<string, List<ItemIndexEntry>>();
+			foreach (var entry in itemIndex)
+			{
+				if (String.IsNullOrEmpty(entry.classification)) continue;
+
+				var type = entry.classification.Split('.')[0];
+				if (!typeIndicies.ContainsKey(type)) typeIndicies.Add(type, new List<ItemIndexEntry>());
+				var typeIndex = typeIndicies[type];
+				typeIndex.Add(entry);
+			}
+			foreach (var pair in typeIndicies)
+			{
+				File.WriteAllText(Path.Combine(outputRoot, pair.Key.ToLower() + "-items.json"), JsonConvert.SerializeObject(pair.Value));
+			}
 
 			// Prices
 			var shopLoader = new ShopLoader(new LocalisationService(labels))
