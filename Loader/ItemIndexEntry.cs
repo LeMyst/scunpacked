@@ -1,7 +1,8 @@
-﻿namespace Loader
+namespace Loader
 {
 	public class ItemIndexEntry
 	{
+		public string jsonFilename;
 		public string jsonUrl;
 		public string xmlSource;
 		public string className;
