@@ -108,7 +108,7 @@ namespace Loader
 				});
 				File.WriteAllText(jsonFilename, json);
 
-				indexEntry.jsonFilename = Path.GetRelativePath(Path.GetDirectoryName(OutputFolder), jsonFilename);
+				indexEntry.jsonFilename = Path.GetRelativePath(OutputFolder, jsonFilename); // Modified by Myst
 				index.Add(indexEntry);
 			}
 
@@ -155,12 +155,13 @@ namespace Loader
 			bool isSpaceship = !(isGroundVehicle || isGravlevVehicle);
 			var indexEntry = new ShipIndexEntry
 			{
+				reference = entity.__ref, // Modified by Myst
 				className = entity.ClassName,
 				type = entity.Components?.SAttachableComponentParams?.AttachDef.Type,
 				subType = entity.Components?.SAttachableComponentParams?.AttachDef.SubType,
-				name = entity.Components.VehicleComponentParams.vehicleName,
-				career = entity.Components.VehicleComponentParams.vehicleCareer,
-				role = entity.Components.VehicleComponentParams.vehicleRole,
+				name = localisationService.GetText(entity.Components.VehicleComponentParams.vehicleName), // Modified by Myst
+				career = localisationService.GetText(entity.Components.VehicleComponentParams.vehicleCareer), // Modified by Myst
+				role = localisationService.GetText(entity.Components.VehicleComponentParams.vehicleRole), // Modified by Myst
 				dogFightEnabled = Convert.ToBoolean(entity.Components.VehicleComponentParams.dogfightEnabled),
 				size = vehicle?.size,
 				isGroundVehicle = isGroundVehicle,

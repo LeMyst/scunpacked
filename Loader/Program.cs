@@ -116,7 +116,7 @@ namespace Loader
 
 			// Ships and vehicles
 			Console.WriteLine("Load Ships and Vehicles");
-			var shipLoader = new ShipLoader
+			var shipLoader = new ShipLoader(localisationSvc)
 			{
 				OutputFolder = outputRoot,
 				DataRoot = scDataRoot,
@@ -124,30 +124,6 @@ namespace Loader
 				Manufacturers = manufacturerIndex
 			};
 			shipLoader.Load();
-
-			// Ships and ground vehicles
-			Console.WriteLine("Load Ships and ground vehicles");
-			var shipLoader = new ShipLoader(new LocalisationService(labels))
-			{
-				OutputFolder = Path.Combine(outputRoot, "ships"),
-				DataRoot = scDataRoot,
-				OnXmlLoadout = path => loadoutLoader.Load(path)
-			};
-			var shipIndex = shipLoader.Load();
-
-			File.WriteAllText(Path.Combine(outputRoot, "ships.json"), JsonConvert.SerializeObject(shipIndex));
-
-			// Ships and ground vehicles
-			Console.WriteLine("Load Ships and ground vehicles");
-			var shipLoader = new ShipLoader(new LocalisationService(labels))
-			{
-				OutputFolder = Path.Combine(outputRoot, "ships"),
-				DataRoot = scDataRoot,
-				OnXmlLoadout = path => loadoutLoader.Load(path)
-			};
-			var shipIndex = shipLoader.Load();
-
-			File.WriteAllText(Path.Combine(outputRoot, "ships.json"), JsonConvert.SerializeObject(shipIndex));
 
 			// Prices
 			if (!shipsOnly)
