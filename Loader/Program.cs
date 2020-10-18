@@ -4,6 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
+using NDesk.Options;
+using Newtonsoft.Json;
+
 namespace Loader
 {
 	class Program
@@ -13,13 +16,15 @@ namespace Loader
 			string scDataRoot = null;
 			string outputRoot = null;
 			string itemFile = null;
+			bool shipsOnly = false;
 
 			var p = new OptionSet
 			{
 				{ "scdata=", v => scDataRoot = v },
 				{ "input=",  v => scDataRoot = v },
 				{ "output=",  v => outputRoot = v },
-				{ "itemfile=", v => itemFile = v }
+				{ "itemfile=", v => itemFile = v },
+				{ "shipsonly", v => shipsOnly = true }
 			};
 
 			var extra = p.Parse(args);
@@ -33,7 +38,7 @@ namespace Loader
 			{
 				Console.WriteLine("Usage:");
 				Console.WriteLine("    Loader.exe -input=<path to extracted Star Citizen data> -output=<path to JSON output folder>");
-				Console.WriteLine(" or Loader.exe -itemfile=<path to an SCItem XML file");
+				Console.WriteLine(" or Loader.exe -itemfile=<path to an SCItem XML file>");
 				Console.WriteLine();
 				return;
 			}
@@ -54,7 +59,7 @@ namespace Loader
 			}
 
 			// Prep the output folder
-			if (Directory.Exists(outputRoot))
+			if (Directory.Exists(outputRoot) && !shipsOnly)
 			{
 				var info = new DirectoryInfo(outputRoot);
 				foreach (var file in info.GetFiles()) file.Delete();
@@ -65,70 +70,63 @@ namespace Loader
 			// A loadout loader to help with any XML loadouts we encounter while parsing entities
 			var loadoutLoader = new LoadoutLoader
 			{
-				OutputFolder = Path.Combine(outputRoot, "loadouts"),
+				OutputFolder = outputRoot,
 				DataRoot = scDataRoot
 			};
 
 			// Localisation
 			Console.WriteLine("Load Localisation");
-			var labels = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-			using (var ini = new StreamReader(Path.Combine(scDataRoot, @"Data\Localization\english\global.ini")))
+			var labelLoader = new LabelsLoader
 			{
-				for (var line = ini.ReadLine(); line != null; line = ini.ReadLine())
-				{
-					var split = line.Split('=', 2);
-					labels.Add(split[0], split[1]);
-				}
-			}
-			File.WriteAllText(Path.Combine(outputRoot, "labels.json"), JsonConvert.SerializeObject(labels));
-			
+				OutputFolder = outputRoot,
+				DataRoot = scDataRoot
+			};
+			var labels = labelLoader.Load("english");
+			var localisationSvc = new LocalisationService(labels);
+
 			// Manufacturers
 			Console.WriteLine("Load Manufacturers");
-			var manufacturerLoader = new ManufacturerLoader(new LocalisationService(labels))
+			var manufacturerLoader = new ManufacturerLoader(localisationSvc)
 			{
+				OutputFolder = outputRoot,
 				DataRoot = scDataRoot
 			};
 			var manufacturerIndex = manufacturerLoader.Load();
-			File.WriteAllText(Path.Combine(outputRoot, "manufacturers.json"), JsonConvert.SerializeObject(manufacturerIndex));
 
 			// Ammunition
 			Console.WriteLine("Load Ammunition");
 			var ammoLoader = new AmmoLoader
 			{
-				OutputFolder = Path.Combine(outputRoot, "ammo"),
+				OutputFolder = outputRoot,
 				DataRoot = scDataRoot
 			};
 			var ammoIndex = ammoLoader.Load();
-			File.WriteAllText(Path.Combine(outputRoot, "ammo.json"), JsonConvert.SerializeObject(ammoIndex));
 
 			// Items
-			Console.WriteLine("Load Items");
-			var itemLoader = new ItemLoader
+			if (!shipsOnly)
 			{
-				OutputFolder = Path.Combine(outputRoot, "items"),
+				Console.WriteLine("Load Items");
+				var itemLoader = new ItemLoader
+				{
+					OutputFolder = outputRoot,
+					DataRoot = scDataRoot,
+					OnXmlLoadout = path => loadoutLoader.Load(path),
+					Manufacturers = manufacturerIndex,
+					Ammo = ammoIndex
+				};
+				itemLoader.Load();
+			}
+
+			// Ships and vehicles
+			Console.WriteLine("Load Ships and Vehicles");
+			var shipLoader = new ShipLoader
+			{
+				OutputFolder = outputRoot,
 				DataRoot = scDataRoot,
 				OnXmlLoadout = path => loadoutLoader.Load(path),
-				Manufacturers = manufacturerIndex,
-				Ammo = ammoIndex
+				Manufacturers = manufacturerIndex
 			};
-			var itemIndex = itemLoader.Load();
-			File.WriteAllText(Path.Combine(outputRoot, "items.json"), JsonConvert.SerializeObject(itemIndex));
-
-			// Create an index file for each different item type
-			var typeIndicies = new Dictionary<string, List<ItemIndexEntry>>();
-			foreach (var entry in itemIndex)
-			{
-				if (String.IsNullOrEmpty(entry.classification)) continue;
-
-				var type = entry.classification.Split('.')[0];
-				if (!typeIndicies.ContainsKey(type)) typeIndicies.Add(type, new List<ItemIndexEntry>());
-				var typeIndex = typeIndicies[type];
-				typeIndex.Add(entry);
-			}
-			foreach (var pair in typeIndicies)
-			{
-				File.WriteAllText(Path.Combine(outputRoot, pair.Key.ToLower() + "-items.json"), JsonConvert.SerializeObject(pair.Value));
-			}
+			shipLoader.Load();
 
 			// Ships and ground vehicles
 			Console.WriteLine("Load Ships and ground vehicles");
@@ -143,22 +141,30 @@ namespace Loader
 			File.WriteAllText(Path.Combine(outputRoot, "ships.json"), JsonConvert.SerializeObject(shipIndex));
 
 			// Prices
-			Console.WriteLine("Load Shops");
-			var shopLoader = new ShopLoader(new LocalisationService(labels))
+			if (!shipsOnly)
 			{
-				DataRoot = scDataRoot
-			};
-			var shops = shopLoader.Load();
-			File.WriteAllText(Path.Combine(outputRoot, "shops.json"), JsonConvert.SerializeObject(shops));
+				Console.WriteLine("Load Shops");
+				var shopLoader = new ShopLoader(localisationSvc)
+				{
+					OutputFolder = outputRoot,
+					DataRoot = scDataRoot
+				};
+				shopLoader.Load();
+			}
 
 			// Starmap
-			Console.WriteLine("Load Starmap");
-			var starmapLoader = new StarmapLoader(new LocalisationService(labels))
+			if (!shipsOnly)
 			{
-				DataRoot = scDataRoot
-			};
-			var starmapIndex = starmapLoader.Load();
-			File.WriteAllText(Path.Combine(outputRoot, "starmap.json"), JsonConvert.SerializeObject(starmapIndex));
+				Console.WriteLine("Load Starmap");
+				var starmapLoader = new StarmapLoader(localisationSvc)
+				{
+					OutputFolder = outputRoot,
+					DataRoot = scDataRoot
+				};
+				starmapLoader.Load();
+			}
+
+			Console.WriteLine("Finished!");
 		}
 	}
 }

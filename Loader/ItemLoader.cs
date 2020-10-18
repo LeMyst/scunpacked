@@ -149,20 +149,9 @@ namespace Loader
 
 		public List<ItemIndexEntry> Load()
 		{
-			Directory.CreateDirectory(OutputFolder);
-			var damageResistanceMacroFolder = @"Data\Libs\Foundry\Records\damage";
-			var damageResistanceMacros = new List<DamageResistanceMacro>();
+			Directory.CreateDirectory(Path.Combine(OutputFolder, "items"));
 
-			foreach (var damageMacroFilename in Directory.EnumerateFiles(Path.Combine(DataRoot, damageResistanceMacroFolder), "*.xml", SearchOption.AllDirectories))
-			{
-				Console.WriteLine(damageMacroFilename);
-				var damageResistanceMacroParser = new DamageResistanceMacroParser();
-				DamageResistanceMacro entity = damageResistanceMacroParser.Parse(damageMacroFilename);
-				Console.WriteLine(entity.__ref);
-				if (entity == null) continue;
-
-				damageResistanceMacros.Add(entity);
-			}
+			var damageResistanceMacros = LoadDamageResistanceMacros();
 
 			var index = new List<ItemIndexEntry>();
 			index.AddRange(Load(@"Data\Libs\Foundry\Records\entities\scitem"));
@@ -188,18 +177,15 @@ namespace Loader
 					ammoEntry = Ammo.FirstOrDefault(x => x.reference == ammoRef);
 				}
 
-				var damageResistances = new DamageResistance();
+				DamageResistance damageResistances = null;
 				if (!String.IsNullOrEmpty(entity.Components?.SCItemSuitArmorParams?.damageResistance))
 				{
 					var damageMacro = damageResistanceMacros.Find(y => y.__ref == entity.Components.SCItemSuitArmorParams.damageResistance);
-					if (damageMacro != null)
-					{
-						damageResistances = damageMacro.damageResistance;
-					}
+					damageResistances = damageMacro?.damageResistance;
 				}
 
 				// Write the JSON of this entity to its own file
-				var jsonFilename = Path.Combine(OutputFolder, $"{entity.ClassName.ToLower()}.json");
+				var jsonFilename = Path.Combine(OutputFolder, "items", $"{entity.ClassName.ToLower()}.json");
 				var json = JsonConvert.SerializeObject(new
 				{
 					magazine = magazine,
@@ -213,7 +199,43 @@ namespace Loader
 				File.WriteAllText(jsonFilename, json);
 			}
 
+			File.WriteAllText(Path.Combine(OutputFolder, "items.json"), JsonConvert.SerializeObject(index));
+
+			// Create an index file for each different item type
+			var typeIndicies = new Dictionary<string, List<ItemIndexEntry>>();
+			foreach (var entry in index)
+			{
+				if (String.IsNullOrEmpty(entry.classification)) continue;
+
+				var type = entry.classification.Split('.')[0];
+				if (!typeIndicies.ContainsKey(type)) typeIndicies.Add(type, new List<ItemIndexEntry>());
+				var typeIndex = typeIndicies[type];
+				typeIndex.Add(entry);
+			}
+			foreach (var pair in typeIndicies)
+			{
+				File.WriteAllText(Path.Combine(OutputFolder, pair.Key.ToLower() + "-items.json"), JsonConvert.SerializeObject(pair.Value));
+			}
+
+
 			return index;
+		}
+
+		private List<DamageResistanceMacro> LoadDamageResistanceMacros()
+		{
+			var damageResistanceMacroFolder = @"Data\Libs\Foundry\Records\damage";
+			var damageResistanceMacros = new List<DamageResistanceMacro>();
+
+			foreach (var damageMacroFilename in Directory.EnumerateFiles(Path.Combine(DataRoot, damageResistanceMacroFolder), "*.xml", SearchOption.AllDirectories))
+			{
+				var damageResistanceMacroParser = new DamageResistanceMacroParser();
+				DamageResistanceMacro entity = damageResistanceMacroParser.Parse(damageMacroFilename);
+				if (entity == null) continue;
+
+				damageResistanceMacros.Add(entity);
+			}
+
+			return damageResistanceMacros;
 		}
 
 		List<ItemIndexEntry> Load(string itemsFolder)
@@ -303,11 +325,6 @@ namespace Loader
 			}
 
 			throw new ApplicationException("Item didn't get picked up by the default match for some reason");
-		}
-
-		public void LoadAmmunitionIfNeeded(EntityClassDefinition entity)
-		{
-
 		}
 	}
 }
