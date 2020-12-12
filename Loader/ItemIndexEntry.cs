@@ -18,5 +18,6 @@ namespace Loader
 		public string majorClass;
 		public string minorClass;
 		public string classification;
+		public StandardisedItem stdItem;
 	}
 }
