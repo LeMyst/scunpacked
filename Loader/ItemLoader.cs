@@ -171,7 +171,6 @@ namespace Loader
 				var indexEntry = CreateIndexEntry(entity);
 				indexEntry.jsonFilename = $"{entity.ClassName.ToLower()}.json";
 				indexEntry.jsonUrl = $"/api/items/{entity.ClassName.ToLower()}.json";
-				indexEntry.xmlSource = Path.GetRelativePath(DataRoot, entityFilename);
 
 				// Add it to the item index
 				index.Add(indexEntry);

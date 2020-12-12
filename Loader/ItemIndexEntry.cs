@@ -4,7 +4,6 @@ namespace Loader
 	{
 		public string jsonFilename;
 		public string jsonUrl;
-		public string xmlSource;
 		public string className;
 		public string reference;
 		public string itemName;

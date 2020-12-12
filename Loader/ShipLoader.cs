@@ -131,6 +131,8 @@ namespace Loader
 				File.WriteAllText(Path.Combine(OutputFolder, "v2", "ships", $"{entity.ClassName.ToLower()}-parts.json"), JsonConvert.SerializeObject(parts));
 				File.WriteAllText(Path.Combine(OutputFolder, "v2", "ships", $"{entity.ClassName.ToLower()}-ports.json"), JsonConvert.SerializeObject(ports));
 
+				var jsonFilename = Path.Combine(OutputFolder, "v2", "ships", $"{entity.ClassName.ToLower()}.json");
+
 				var v2json = JsonConvert.SerializeObject(new
 				{
 					Entity = entity,
@@ -197,9 +199,9 @@ namespace Loader
 			{
 				reference = entity.__ref, // Modified by Myst
 				className = entity.ClassName,
-				name = localisationService.GetText(entity.Components.VehicleComponentParams.vehicleName), // Modified by Myst
-				career = localisationService.GetText(entity.Components.VehicleComponentParams.vehicleCareer), // Modified by Myst
-				role = localisationService.GetText(entity.Components.VehicleComponentParams.vehicleRole), // Modified by Myst
+				name = localisationSvc.GetText(entity.Components.VehicleComponentParams.vehicleName), // Modified by Myst
+				career = localisationSvc.GetText(entity.Components.VehicleComponentParams.vehicleCareer), // Modified by Myst
+				role = localisationSvc.GetText(entity.Components.VehicleComponentParams.vehicleRole), // Modified by Myst
 				dogFightEnabled = Convert.ToBoolean(entity.Components.VehicleComponentParams.dogfightEnabled),
 				size = shipSummary?.Size,
 				isGroundVehicle = isGroundVehicle,

@@ -3,10 +3,6 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
-
-using NDesk.Options;
-
-using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace Loader
