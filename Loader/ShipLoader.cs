@@ -43,6 +43,7 @@ namespace Loader
 			"microtech",
 			"shubin",
 			"drug",
+			"advocacy",
 
 			// Skin variants
 			"pink",
@@ -66,16 +67,18 @@ namespace Loader
 		ItemBuilder itemBuilder;
 		ManufacturerService manufacturerSvc;
 		LocalisationService localisationSvc;
-		LoadoutLoader loadoutLoader;
 		EntityService entitySvc;
+		ItemInstaller itemInstaller;
+		LoadoutLoader loadoutLoader;
 
-		public ShipLoader(ItemBuilder itemBuilder, ManufacturerService manufacturerSvc, LocalisationService localisationSvc, LoadoutLoader loadoutLoader, EntityService entitySvc)
+		public ShipLoader(ItemBuilder itemBuilder, ManufacturerService manufacturerSvc, LocalisationService localisationSvc, EntityService entitySvc, ItemInstaller itemInstaller, LoadoutLoader loadoutLoader)
 		{
 			this.itemBuilder = itemBuilder;
 			this.manufacturerSvc = manufacturerSvc;
 			this.localisationSvc = localisationSvc;
-			this.loadoutLoader = loadoutLoader;
 			this.entitySvc = entitySvc;
+			this.itemInstaller = itemInstaller;
+			this.loadoutLoader = loadoutLoader;
 		}
 
 		public List<(ShipIndexEntry, StandardisedShip)> Load()
@@ -286,63 +289,15 @@ namespace Loader
 
 		List<StandardisedPart> InitialiseShip(EntityClassDefinition entity, Vehicle vehicle)
 		{
-			var loadout = entity.Components.SEntityComponentDefaultLoadoutParams.loadout;
+			var loadout = loadoutLoader.Load(entity);
 
-			var stdLoadout = BuildLoadout(loadout);
+			var partList = vehicle != null ? BuildPartList(vehicle.Parts) : DeducePartList(loadout);
 
-			var partList = vehicle != null ? BuildPartList(vehicle.Parts) : DeducePartList(stdLoadout);
+			itemInstaller.InstallLoadout(partList, loadout);
 
-			InstallItems(partList, stdLoadout);
 			InstallFakeItems(partList);
 
 			return partList;
-		}
-
-		void InstallItems(List<StandardisedPart> parts, List<StandardisedLoadoutEntry> loadout)
-		{
-			foreach (var part in parts)
-			{
-				InstallItems(part, loadout);
-			}
-		}
-
-		void InstallItems(StandardisedPart part, List<StandardisedLoadoutEntry> loadout)
-		{
-			if (part.Port != null) InstallItem(part.Port, loadout);
-			InstallItems(part.Parts, loadout);
-		}
-
-		void InstallItems(List<StandardisedItemPort> ports, List<StandardisedLoadoutEntry> loadout)
-		{
-			foreach (var port in ports)
-			{
-				InstallItem(port, loadout);
-			}
-		}
-
-		void InstallItem(StandardisedItemPort port, List<StandardisedLoadoutEntry> loadout)
-		{
-			var loadoutEntry = FindLoadoutEntry(port.PortName, loadout);
-			if (String.IsNullOrEmpty(loadoutEntry?.ClassName)) return;
-
-			port.Loadout = loadoutEntry.ClassName;
-
-			var item = entitySvc.GetByClassName(loadoutEntry.ClassName);
-			if (item == null) return;
-
-			var standardisedItem = itemBuilder.BuildItem(item);
-			port.InstalledItem = standardisedItem;
-
-			// Handle XML loadout files
-			if (!String.IsNullOrEmpty(item.Components.SEntityComponentDefaultLoadoutParams?.loadout.SItemPortLoadoutXMLParams?.loadoutPath))
-			{
-				var loadoutFilename = item.Components.SEntityComponentDefaultLoadoutParams.loadout.SItemPortLoadoutXMLParams.loadoutPath;
-				var newLoadout = loadoutLoader.Load(loadoutFilename);
-
-				if (newLoadout != null) loadoutEntry.Entries.AddRange(newLoadout);
-			}
-
-			InstallItems(standardisedItem.Ports, loadoutEntry.Entries);
 		}
 
 		List<StandardisedPart> BuildPartList(Part[] parts)
@@ -467,47 +422,6 @@ namespace Loader
 			return flags;
 		}
 
-		StandardisedLoadoutEntry FindLoadoutEntry(string portName, List<StandardisedLoadoutEntry> loadout)
-		{
-			var loadoutEntry = loadout.FirstOrDefault(x => String.Equals(x.PortName, portName, StringComparison.OrdinalIgnoreCase));
-			return loadoutEntry;
-		}
-
-		List<StandardisedLoadoutEntry> BuildLoadout(loadout cigLoadout)
-		{
-			var entries = new List<StandardisedLoadoutEntry>();
-
-			if (cigLoadout.SItemPortLoadoutManualParams != null)
-			{
-				foreach (var cigEntry in cigLoadout.SItemPortLoadoutManualParams.entries)
-				{
-					entries.Add(BuildLoadout(cigEntry));
-				}
-			}
-
-			return entries;
-		}
-
-		StandardisedLoadoutEntry BuildLoadout(SItemPortLoadoutEntryParams cigLoadoutEntry)
-		{
-			var entry = new StandardisedLoadoutEntry
-			{
-				PortName = cigLoadoutEntry.itemPortName,
-				ClassName = cigLoadoutEntry.entityClassName,
-				Entries = new List<StandardisedLoadoutEntry>()
-			};
-
-			if (cigLoadoutEntry.loadout.SItemPortLoadoutManualParams != null)
-			{
-				foreach (var e in cigLoadoutEntry.loadout.SItemPortLoadoutManualParams.entries)
-				{
-					entry.Entries.Add(BuildLoadout(e));
-				}
-			}
-
-			return entry;
-		}
-
 		IEnumerable<(StandardisedPart, int)> FindParts(List<StandardisedPart> parts, Predicate<StandardisedPart> predicate, int depth = 0)
 		{
 			foreach (var part in parts)
@@ -587,7 +501,7 @@ namespace Loader
 			portSummary.PowerPlants = FindItemPorts(parts, x => x.Category == "Power plants", true).Select(x => x.Item1).ToList();
 			portSummary.Coolers = FindItemPorts(parts, x => x.Category == "Coolers", true).Select(x => x.Item1).ToList();
 			portSummary.Shields = FindItemPorts(parts, x => x.Category == "Shield generators", true).Select(x => x.Item1).ToList();
-			portSummary.CargoGrids = FindItemPorts(parts, x => x.Category == "Cargo grids" || x.Category == "Cargo containers", true).Select(x => x.Item1).ToList();
+			portSummary.CargoGrids = FindItemPorts(parts, x => x.Category == "Cargo grids", true).Select(x => x.Item1).ToList();
 			portSummary.Countermeasures = FindItemPorts(parts, x => x.Category == "Countermeasures", true).Select(x => x.Item1).ToList();
 			portSummary.MainThrusters = FindItemPorts(parts, x => x.Category == "Main thrusters", true).Select(x => x.Item1).ToList();
 			portSummary.RetroThrusters = FindItemPorts(parts, x => x.Category == "Retro thrusters", true).Select(x => x.Item1).ToList();
@@ -597,6 +511,7 @@ namespace Loader
 			portSummary.HydrogenFuelTanks = FindItemPorts(parts, x => x.Category == "Fuel tanks", true).Select(x => x.Item1).ToList();
 			portSummary.QuantumDrives = FindItemPorts(parts, x => x.Category == "Quantum drives", true).Select(x => x.Item1).ToList();
 			portSummary.QuantumFuelTanks = FindItemPorts(parts, x => x.Category == "Quantum fuel tanks", true).Select(x => x.Item1).ToList();
+			portSummary.Avionics = FindItemPorts(parts, x => x.Category == "Scanners" || x.Category == "Pings" || x.Category == "Radars" || x.Category == "Transponders", true).Select(x => x.Item1).ToList();
 
 			return portSummary;
 		}
@@ -616,7 +531,10 @@ namespace Loader
 				WeaponCrew = portSummary.MannedTurrets.Count + portSummary.RemoteTurrets.Count,
 				OperationsCrew = Math.Max(portSummary.MiningTurrets.Count, portSummary.UtilityTurrets.Count),
 				Mass = FindParts(parts, x => true).Sum((x) => x.Item1.Mass ?? 0),
-				Cargo = (int)(portSummary.CargoGrids.Sum(x => x.InstalledItem?.CargoGrid?.Capacity ?? 0)),
+				Cargo = (int)(portSummary.CargoGrids
+					.Where(x => x.InstalledItem?.CargoGrid != null)
+					.Where(x => !x.InstalledItem.CargoGrid.MiningOnly)
+					.Sum(x => x.InstalledItem.CargoGrid.Capacity)),
 			};
 
 			shipSummary.IsVehicle = entity.Components?.VehicleComponentParams.vehicleCareer == "@vehicle_focus_ground";
@@ -855,15 +773,5 @@ namespace Loader
 				if (port.Size == 0) port.Size = port.InstalledItem.Size;
 			}
 		}
-	}
-
-	class JsonSCItem
-	{
-		public RawEntity Raw { get; set; }
-	}
-
-	class RawEntity
-	{
-		public EntityClassDefinition Entity { get; set; }
 	}
 }

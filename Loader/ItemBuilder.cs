@@ -26,12 +26,12 @@ namespace Loader
 			var stdItem = new StandardisedItem
 			{
 				ClassName = entity.ClassName,
-				Size = entity.Components.SAttachableComponentParams.AttachDef.Size,
-				Grade = entity.Components.SAttachableComponentParams.AttachDef.Grade,
-				Type = BuildTypeName(entity.Components.SAttachableComponentParams.AttachDef.Type, entity.Components.SAttachableComponentParams.AttachDef.SubType),
-				Name = localisationSvc.GetText(entity.Components.SAttachableComponentParams.AttachDef.Localization.Name, entity.ClassName),
-				Description = localisationSvc.GetText(entity.Components.SAttachableComponentParams.AttachDef.Localization.Description),
-				Manufacturer = manufacturerSvc.GetManufacturer(entity.Components.SAttachableComponentParams.AttachDef.Manufacturer, entity.ClassName),
+				Size = entity.Components.SAttachableComponentParams?.AttachDef.Size ?? 0,
+				Grade = entity.Components.SAttachableComponentParams?.AttachDef.Grade ?? 0,
+				Type = BuildTypeName(entity.Components.SAttachableComponentParams?.AttachDef.Type, entity.Components.SAttachableComponentParams?.AttachDef.SubType),
+				Name = localisationSvc.GetText(entity.Components.SAttachableComponentParams?.AttachDef.Localization.Name, entity.ClassName),
+				Description = localisationSvc.GetText(entity.Components.SAttachableComponentParams?.AttachDef.Localization.Description),
+				Manufacturer = manufacturerSvc.GetManufacturer(entity.Components.SAttachableComponentParams?.AttachDef.Manufacturer, entity.ClassName),
 				Ports = BuildPortList(entity),
 				Tags = BuildTagList(entity)
 			};
@@ -55,12 +55,17 @@ namespace Loader
 			stdItem.PowerConnection = BuildPowerConnectionInfo(entity);
 			stdItem.Weapon = BuildWeaponInfo(entity);
 			stdItem.Ammunition = BuildAmmunitionInfo(entity);
+			stdItem.Missile = BuildMissileInfo(entity);
+			stdItem.Scanner = BuildScannerInfo(entity);
+			stdItem.Radar = BuildRadarInfo(entity);
+			stdItem.Ping = BuildPingInfo(entity);
 
 			return stdItem;
 		}
 
 		public string BuildTypeName(string major, string minor)
 		{
+			if (String.IsNullOrEmpty(major)) return "UNKNOWN";
 			if (String.IsNullOrWhiteSpace(minor) || minor == "UNKNOWN") return major;
 			else return $"{major}.{minor}";
 		}
@@ -145,15 +150,24 @@ namespace Loader
 
 		StandardisedShield BuildShieldInfo(EntityClassDefinition item)
 		{
-			var shieldComponent = item.Components.SCItemShieldGeneratorParams;
-			if (shieldComponent == null) return null;
+			var shield = item.Components.SCItemShieldGeneratorParams;
+			if (shield == null) return null;
 
 			return new StandardisedShield
 			{
-				HitPoints = shieldComponent.MaxShieldHealth,
-				Regeneration = shieldComponent.MaxShieldRegen,
-				DownedDelay = shieldComponent.DownedRegenDelay,
-				DamagedDelay = shieldComponent.DamagedRegenDelay
+				Health = shield.MaxShieldHealth,
+				Regeneration = shield.MaxShieldRegen,
+				DownedDelay = shield.DownedRegenDelay,
+				DamagedDelay = shield.DamagedRegenDelay,
+				Absorption = new StandardisedShieldAbsorption
+				{
+					Physical = new StandardisedShieldAbsorptionRange { Minimum = shield.ShieldAbsorption[0].Min, Maximum = shield.ShieldAbsorption[0].Max },
+					Energy = new StandardisedShieldAbsorptionRange { Minimum = shield.ShieldAbsorption[1].Min, Maximum = shield.ShieldAbsorption[1].Max },
+					Distortion = new StandardisedShieldAbsorptionRange { Minimum = shield.ShieldAbsorption[2].Min, Maximum = shield.ShieldAbsorption[2].Max },
+					Thermal = new StandardisedShieldAbsorptionRange { Minimum = shield.ShieldAbsorption[3].Min, Maximum = shield.ShieldAbsorption[3].Max },
+					Biochemical = new StandardisedShieldAbsorptionRange { Minimum = shield.ShieldAbsorption[4].Min, Maximum = shield.ShieldAbsorption[4].Max },
+					Stun = new StandardisedShieldAbsorptionRange { Minimum = shield.ShieldAbsorption[5].Min, Maximum = shield.ShieldAbsorption[5].Max }
+				}
 			};
 		}
 
@@ -246,16 +260,17 @@ namespace Loader
 				Width = cargo.dimensions.x,
 				Height = cargo.dimensions.z,
 				Depth = cargo.dimensions.y,
-				Capacity = Math.Floor(cargo.dimensions.x / 1.25) * Math.Floor(cargo.dimensions.y / 1.25) * Math.Floor(cargo.dimensions.z / 1.25)
+				Capacity = Math.Floor(cargo.dimensions.x / 1.25) * Math.Floor(cargo.dimensions.y / 1.25) * Math.Floor(cargo.dimensions.z / 1.25),
+				MiningOnly = cargo.miningOnly
 			};
 		}
 
 		StandardisedFuelTank BuildQuantumFuelTankInfo(EntityClassDefinition item)
 		{
-			if (item.Components.SAttachableComponentParams.AttachDef.Type != "QuantumFuelTank") return null;
-
 			var tank = item.Components.SCItemFuelTankParams;
 			if (tank == null) return null;
+
+			if (item.Components.SAttachableComponentParams.AttachDef.Type != "QuantumFuelTank") return null;
 
 			return new StandardisedFuelTank
 			{
@@ -265,10 +280,10 @@ namespace Loader
 
 		StandardisedFuelTank BuildHydrogenFuelTankInfo(EntityClassDefinition item)
 		{
-			if (item.Components.SAttachableComponentParams.AttachDef.Type != "FuelTank") return null;
-
 			var tank = item.Components.SCItemFuelTankParams;
 			if (tank == null) return null;
+
+			if (item.Components.SAttachableComponentParams.AttachDef.Type != "FuelTank") return null;
 
 			return new StandardisedFuelTank
 			{
@@ -329,8 +344,8 @@ namespace Loader
 
 		StandardisedMissileRack BuildMissileRackInfo(EntityClassDefinition item)
 		{
-			if (item.Components.SAttachableComponentParams.AttachDef.Type != "MissileLauncher") return null;
-			if (item.Components.SAttachableComponentParams.AttachDef.SubType != "MissileRack") return null;
+			if (item.Components.SAttachableComponentParams?.AttachDef.Type != "MissileLauncher") return null;
+			if (item.Components.SAttachableComponentParams?.AttachDef.SubType != "MissileRack") return null;
 
 			var rootPort = item.Components.SCItem?.ItemPorts;
 			if (rootPort == null || rootPort.Length == 0) return null;
@@ -507,6 +522,21 @@ namespace Loader
 			};
 		}
 
+		StandardisedDamage ConvertDamage(DamageInfo damage)
+		{
+			if (damage == null) return null;
+
+			return new StandardisedDamage
+			{
+				Physical = damage.DamagePhysical,
+				Energy = damage.DamageEnergy,
+				Distortion = damage.DamageDistortion,
+				Thermal = damage.DamageThermal,
+				Biochemical = damage.DamageBiochemical,
+				Stun = damage.DamageStun
+			};
+		}
+
 		AmmoParams GetAmmoParams(EntityClassDefinition item)
 		{
 			// If this a weapon that contains its own ammo, or if it is a magazine, then it will have an SCAmmoContainerComponentParams component.
@@ -521,6 +551,79 @@ namespace Loader
 
 			// And the magazine's SAmmoContainerComponentParams will tell us about the ammo
 			return ammoSvc.GetByReference(mag.Components.SAmmoContainerComponentParams.ammoParamsRecord);
+		}
+
+		StandardisedMissile BuildMissileInfo(EntityClassDefinition item)
+		{
+			var missile = item.Components.SCItemMissileParams;
+			if (missile == null) return null;
+
+			var info = new StandardisedMissile
+			{
+				Damage = ConvertDamage(missile.explosionParams.damage[0])
+			};
+
+			return info;
+		}
+
+		StandardisedScanner BuildScannerInfo(EntityClassDefinition item)
+		{
+			var scanner = item.Components.SSCItemScannerComponentParams;
+			if (scanner == null) return null;
+
+			var info = new StandardisedScanner
+			{
+				Range = scanner.scanRange
+			};
+
+			return info;
+		}
+
+		StandardisedRadar BuildRadarInfo(EntityClassDefinition item)
+		{
+			var radar = item.Components.SCItemRadarComponentParams;
+			if (radar == null) return null;
+
+			var info = new StandardisedRadar
+			{
+				DetectionLifetime = radar.detectionLifetime,
+				AltitudeCeiling = radar.altitudeCeiling,
+				CrossSectionOcclusion = radar.enableCrossSectionOcclusion,
+				Signatures = BuildDetectionSignatures(item)
+			};
+
+			return info;
+		}
+
+		List<StandardisedSignatureDetection> BuildDetectionSignatures(EntityClassDefinition item)
+		{
+			var detections = new List<StandardisedSignatureDetection>();
+
+			foreach (var detection in item.Components.SCItemRadarComponentParams.signatureDetection)
+			{
+				detections.Add(new StandardisedSignatureDetection
+				{
+					Detectable = detection.detectable,
+					Sensitivity = detection.sensitivity,
+					AmbientPiercing = detection.ambientPiercing
+				});
+			}
+
+			return detections;
+		}
+
+		StandardisedPing BuildPingInfo(EntityClassDefinition item)
+		{
+			var ping = item.Components.SSCItemPingComponentParams;
+			if (ping == null) return null;
+
+			var info = new StandardisedPing
+			{
+				ChargeTime = ping.maximumChargeTime,
+				CooldownTime = ping.maximumCooldownTime
+			};
+
+			return info;
 		}
 	}
 }

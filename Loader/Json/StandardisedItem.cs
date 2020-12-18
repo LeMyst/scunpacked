@@ -32,6 +32,10 @@ namespace Loader
 		public StandardisedCoolerConnection HeatConnection { get; set; }
 		public StandardisedWeapon Weapon { get; set; }
 		public StandardisedAmmunition Ammunition { get; set; }
+		public StandardisedMissile Missile { get; set; }
+		public StandardisedScanner Scanner { get; set; }
+		public StandardisedRadar Radar { get; set; }
+		public StandardisedPing Ping { get; set; }
 
 		public List<StandardisedItemPort> Ports { get; set; }
 
@@ -49,18 +53,5 @@ namespace Loader
 		{
 			return Tags?.Count > 0;
 		}
-	}
-
-	public class StandardisedPowerConnection
-	{
-		public double PowerBase { get; set; }
-		public double PowerDraw { get; set; }
-	}
-
-	public class StandardisedCoolerConnection
-	{
-		public double ThermalEnergyBase { get; set; }
-		public double ThermalEnergyDraw { get; set; }
-		public double CoolingRate { get; set; }
 	}
 }
