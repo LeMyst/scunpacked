@@ -19,6 +19,7 @@ namespace Loader
 			bool doStarmap = true;
 			bool noCache = false;
 			string typeFilter = null;
+			string shipFilter = null;
 
 			var p = new OptionSet
 			{
@@ -30,7 +31,8 @@ namespace Loader
 				{ "noshops", v => doShops = false },
 				{ "nomap", v => doStarmap = false },
 				{ "nocache", v => noCache = true },
-				{ "types=", v => typeFilter = v }
+				{ "types=", v => typeFilter = v },
+				{ "ships=", v=> shipFilter = v }
 			};
 
 			var extra = p.Parse(args);
@@ -99,6 +101,15 @@ namespace Loader
 			var ammoIndex = ammoLoader.Load();
 			var ammoSvc = new AmmoService(ammoIndex);
 
+			// Insurance
+			Console.WriteLine("Load Insurance");
+			var insuranceLoader = new InsuranceLoader()
+			{
+				DataRoot = scDataRoot
+			};
+			var insurancePrices = insuranceLoader.Load();
+			var insuranceSvc = new InsuranceService(insurancePrices);
+
 			var xmlLoadoutLoader = new XmlLoadoutLoader { DataRoot = scDataRoot };
 			var manualLoadoutLoader = new ManualLoadoutLoader();
 			var loadoutLoader = new LoadoutLoader(xmlLoadoutLoader, manualLoadoutLoader);
@@ -121,12 +132,12 @@ namespace Loader
 			if (doShips)
 			{
 				Console.WriteLine("Load Ships and Vehicles");
-				var shipLoader = new ShipLoader(itemBuilder, manufacturerSvc, localisationSvc, entitySvc, itemInstaller, loadoutLoader)
+				var shipLoader = new ShipLoader(itemBuilder, manufacturerSvc, localisationSvc, entitySvc, itemInstaller, loadoutLoader, insuranceSvc)
 				{
 					OutputFolder = outputRoot,
 					DataRoot = scDataRoot,
 				};
-				shipLoader.Load();
+				shipLoader.Load(shipFilter);
 			}
 
 			// Prices
