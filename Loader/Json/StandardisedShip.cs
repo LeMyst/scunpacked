@@ -4,6 +4,7 @@ namespace Loader
 {
 	public class StandardisedShip
 	{
+		public string Reference { get; set; } // Added by Myst
 		public string ClassName { get; set; }
 		public string Name { get; set; }
 		public string Description { get; set; }

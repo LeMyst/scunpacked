@@ -32,7 +32,8 @@ namespace Loader
 			return new StandardisedManufacturer
 			{
 				Code = found.code,
-				Name = found.name
+				Name = found.name,
+				Reference = found.reference // Added by Myst
 			};
 		}
 	}

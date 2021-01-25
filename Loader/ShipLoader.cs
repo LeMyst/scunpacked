@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 
 using scdb.Xml.Entities;
 using scdb.Xml.Vehicles;
+using System.Globalization;
 
 namespace Loader
 {
@@ -347,7 +348,7 @@ namespace Loader
 				if (Char.IsDigit(c) || c == '.') hacked += c;
 			}
 
-			return double.Parse(hacked);
+			return double.Parse(hacked, CultureInfo.InvariantCulture);
 		}
 
 		double? CalculateDamageToDestroyShip(Part part)
@@ -526,6 +527,7 @@ namespace Loader
 		{
 			var shipSummary = new StandardisedShip
 			{
+				Reference = entity.__ref, // Added by Myst
 				ClassName = entity.ClassName,
 				Name = localisationSvc.GetText(entity.Components.VehicleComponentParams.vehicleName, entity.ClassName),
 				Description = localisationSvc.GetText(entity.Components.VehicleComponentParams.vehicleDescription),
