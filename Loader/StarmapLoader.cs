@@ -22,7 +22,7 @@ namespace Loader
 		public List<StarmapIndexEntry> Load()
 		{
 			var index = new List<StarmapIndexEntry>();
-			index.AddRange(Load(@"Data\Libs\Foundry\Records\starmap\pu"));
+			index.AddRange(Load(Path.Combine("Data", "Libs", "Foundry", "Records", "starmap", "pu")));
 
 			File.WriteAllText(Path.Combine(OutputFolder, "starmap.json"), JsonConvert.SerializeObject(index));
 
