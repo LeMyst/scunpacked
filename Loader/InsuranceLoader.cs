@@ -16,7 +16,7 @@ namespace Loader
 		{
 			var output = new Dictionary<string, StandardisedInsurance>();
 
-			var insurance = Parse<ShipInsuranceRecord>(Path.Combine(DataRoot, Path.Combine("data", "libs", "foundry", "records", "shipinsurancerecord", "shipinsurance.xml")));
+			var insurance = Parse<ShipInsuranceRecord>(Path.Combine(DataRoot, Path.Combine("Data", "Libs", "Foundry", "Records", "shipinsurancerecord", "shipinsurance.xml")));
 			foreach (var record in insurance.allShips)
 			{
 				output.Add(record.shipEntityClassName, new StandardisedInsurance
