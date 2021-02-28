@@ -93,8 +93,8 @@ namespace Loader
 			Directory.CreateDirectory(Path.Combine(OutputFolder, "v2", "ships"));
 
 			var index = new List<(ShipIndexEntry, StandardisedShip)>();
-			index.AddRange(LoadFolder(@"Data\Libs\Foundry\Records\entities\spaceships", shipFilter));
-			index.AddRange(LoadFolder(@"Data\Libs\Foundry\Records\entities\groundvehicles", shipFilter));
+			index.AddRange(LoadFolder(Path.Combine("Data", "Libs", "Foundry", "Records", "entities", "spaceships"), shipFilter));
+			index.AddRange(LoadFolder(Path.Combine("Data", "Libs", "Foundry", "Records", "entities", "groundvehicles"), shipFilter));
 
 			var oldIndexItems = index.Select(x => x.Item1).ToList();
 			var newIndexItems = index.Select(x => x.Item2).ToList();

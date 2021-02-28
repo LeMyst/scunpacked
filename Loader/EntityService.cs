@@ -79,7 +79,7 @@ namespace Loader
 				referenceToClassNameMap = new Dictionary<string, string>();
 				classNameToTypeMap = new Dictionary<string, string>();
 
-				BuildItemDirectory(@"Data\Libs\Foundry\Records\entities\scitem");
+				BuildItemDirectory(Path.Combine("Data", "Libs", "Foundry", "Records", "entities", "scitem"));
 				//BuildItemDirectory(@"Data\Libs\Foundry\Records\entities\scitem\ships");
 				//BuildItemDirectory(@"Data\Libs\Foundry\Records\entities\scitem\ships\weapons");
 				//BuildItemDirectory(@"Data\Libs\Foundry\Records\entities\scitem\weapons");
